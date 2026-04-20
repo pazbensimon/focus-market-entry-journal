@@ -330,7 +330,7 @@ body { font-family: var(--heb); background: var(--bg); color: var(--text); min-h
 <div class="modal-backdrop" id="setupModal">
   <div class="modal">
     <div class="modal-title">הגדרות התיק</div>
-    <div class="modal-sub">הזיני סכום פתיחה, חלקי לנכסים והקצי אחוז לכל נכס.</div>
+    <div class="modal-sub">הזיני סכום פתיחה, חלקי לנכסים והקצי אחוזים לכל סוג נכס.</div>
 
     <div class="fsec">
       <div class="fsec-title">קרן התיק הכוללת</div>
@@ -356,6 +356,7 @@ body { font-family: var(--heb); background: var(--bg); color: var(--text); min-h
 
       <div id="container_bond"></div>
       <button class="btn-add-row" onclick="addRow('bond')">+ הוסף נכס</button>
+      <div class="total-bar warn" id="bondTotal" style="margin-top:8px;">סה"כ אג"ח: 0%</div>
     </div>
 
     <div class="fsec">
@@ -513,14 +514,14 @@ function renderRows(prefix) {
 
 function renderAllRows() { ['bond','dev','idx','sec','stk'].forEach(renderRows); }
 
-function addRow(prefix) { if (!dynRows[prefix]) dynRows[prefix] = []; dynRows[prefix].push({name:'',pct:0}); renderRows(prefix); updateStockTotal(); }
+function addRow(prefix) { if (!dynRows[prefix]) dynRows[prefix] = []; dynRows[prefix].push({name:'',pct:0}); renderRows(prefix); updateStockTotal(); updateBondTotal(); }
 
 function removeRow(prefix, idx) {
   if (dynRows[prefix].length <= 1) return;
-  dynRows[prefix].splice(idx,1); renderRows(prefix); updateStockTotal();
+  dynRows[prefix].splice(idx,1); renderRows(prefix); updateStockTotal(); updateBondTotal();
 }
 
-function setName(prefix, idx, val) { dynRows[prefix][idx].name = val; updateStockTotal(); }
+function setName(prefix, idx, val) { dynRows[prefix][idx].name = val; updateStockTotal(); updateBondTotal(); }
 
 function setPct(prefix, idx, val) {
   var pct = parseFloat(val) || 0;
@@ -532,7 +533,7 @@ function setPct(prefix, idx, val) {
     updateStockTotal(); return;
   }
   dynRows[prefix][idx].pct = pct;
-  updateStockTotal();
+  updateStockTotal(); updateBondTotal();
 }
 
 function selectBondType(type) {
@@ -551,6 +552,15 @@ function updateTopTotal() {
   var el = document.getElementById('topTotal');
   el.textContent = 'סה"כ: '+t+'%';
   el.className = 'total-bar '+(Math.abs(t-100)<0.5?'ok':'warn');
+}
+
+function updateBondTotal() {
+  var total = 0;
+  (dynRows['bond']||[]).forEach(function(r){ total += parseFloat(r.pct)||0; });
+  var el = document.getElementById('bondTotal');
+  if (!el) return;
+  el.textContent = 'סה"כ אג"ח: ' + Math.round(total*10)/10 + '%';
+  el.className = 'total-bar ' + (Math.abs(total-100)<0.5 ? 'ok' : 'warn');
 }
 
 function updateStockTotal() {
@@ -818,7 +828,7 @@ function openSetup() {
     selectBondType(config.bondType||'etf');
     if (config.dynRows) dynRows = JSON.parse(JSON.stringify(config.dynRows));
   }
-  updateTopTotal(); updateStockTotal();
+  updateTopTotal(); updateStockTotal(); updateBondTotal();
   document.getElementById('setupModal').classList.add('show');
   setTimeout(renderAllRows, 10);
 }
@@ -835,6 +845,10 @@ function saveConfig() {
   ['dev','idx','sec','stk'].forEach(function(p){ (dynRows[p]||[]).forEach(function(r){ stockSum+=parseFloat(r.pct)||0; }); });
   if (Math.abs(stockSum-100)>1) { alert('חלוקת המניות חייבת להיות 100%'); return; }
 
+  var bondSum = 0;
+  (dynRows['bond']||[]).forEach(function(r){ bondSum+=parseFloat(r.pct)||0; });
+  if (bondSum > 0 && Math.abs(bondSum-100)>1) { alert('חלוקת האג"ח / מזומן חייבת להיות 100%'); return; }
+
   config = {fund:fund, bondsPct:bondsPct, stocksPct:stocksPct, cashPct:cashPct,
     bondType:bondType,
     dynRows:JSON.parse(JSON.stringify(dynRows))};
@@ -850,7 +864,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('setupModal').addEventListener('click', function(e){ if(e.target===this) this.classList.remove('show'); });
   load();
   renderAllRows();
-  updateTopTotal(); updateStockTotal();
+  updateTopTotal(); updateStockTotal(); updateBondTotal();
   if (config) {
     document.getElementById('welcomeScreen').style.display='none';
     document.getElementById('appBody').style.display='block';
