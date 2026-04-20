@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>יומן כניסה לשוק</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --border: #e8e4de;
+  --border-dark: #c8c4be;
+  --text: #000000;
+  --muted: #888580;
+  --faint: #f2f0eb;
+  --accent: #000000;
+  --accent2: #2c2b2d;
+  --green: #d1d7b2;
+  --red: #b03030;
+  --red-light: rgba(176,48,48,0.09);
+  --mono: 'Heebo', sans-serif;
+  --heb: 'Heebo', sans-serif;
+  --radius: 10px;
+  --shadow: 0 1px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 6px 28px rgba(0,0,0,0.09);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--heb); background: var(--bg); color: var(--text); min-height: 100vh; direction: rtl; }
+
+/* HEADER */
+.app-header {
+  background: #000000; color: white;
+  padding: 0 28px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.header-title { font-size: 16px; font-weight: 800; }
+.header-title span { font-weight: 300; opacity: 0.55; font-size: 12px; margin-right: 8px; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.portfolio-pill {
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 20px; padding: 4px 14px;
+  font-size: 13px; font-weight: 700; color: white;
+  display: flex; align-items: center; gap: 6px;
+}
+.portfolio-pill .lbl { opacity: 0.6; font-weight: 400; font-size: 11px; }
+.btn-hdr {
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.22);
+  color: white; border-radius: 7px; padding: 6px 13px;
+  font-family: var(--heb); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-hdr:hover { background: rgba(255,255,255,0.25); }
+
+/* MODAL */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 100;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(3px);
+}
+.modal-backdrop.show { display: flex; }
+.modal {
+  background: var(--surface); border-radius: 16px;
+  padding: 28px 28px 24px; width: 94%; max-width: 560px;
+  max-height: 90vh; overflow-y: auto;
+  direction: rtl; text-align: right;
+  box-shadow: var(--shadow-lg); animation: slideUp 0.22s ease;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+.modal-title { font-size: 19px; font-weight: 900; color: #000000; margin-bottom: 4px; }
+.modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 22px; font-weight: 400; line-height: 1.6; }
+
+.fsec { margin-bottom: 22px; }
+.fsec-title {
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--muted); margin-bottom: 10px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.fsec-badge { font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; letter-spacing: 0.05em; background: rgba(0,0,0,0.05); color: #888; }
+
+.asset-cfg-row {
+  display: grid; grid-template-columns: 1fr auto 28px;
+  gap: 8px; align-items: center;
+  margin-bottom: 2px; background: var(--faint);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px;
+}
+.row-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 4px; }
+.asset-cfg-row input[type="text"] {
+  width: 100%; background: white; border: 1px solid var(--border-dark);
+  border-radius: 5px; padding: 0 10px;
+  font-family: var(--heb); font-size: 13px; font-weight: 600; color: var(--text);
+  outline: none; direction: rtl; transition: border-color 0.15s;
+  height: 36px; box-sizing: border-box;
+}
+.asset-cfg-row input[type="text"]:focus { border-color: #2c2b2d; }
+.asset-cfg-row input[type="text"]::placeholder { color: #bbb; font-weight: 400; }
+.pct-wrap { display: flex; align-items: center; gap: 4px; }
+.pct-wrap input[type="number"] {
+  width: 54px; background: white; border: 1px solid var(--border-dark);
+  border-radius: 5px; padding: 0 6px;
+  font-family: var(--heb); font-size: 13px; font-weight: 700;
+  color: #000000; text-align: center; outline: none;
+  height: 36px; box-sizing: border-box;
+}
+.pct-wrap input[type="number"]:focus { border-color: #2c2b2d; }
+.pct-wrap span { font-size: 11px; color: var(--muted); }
+.active-toggle {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid var(--border-dark); background: white;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; transition: all 0.15s; flex-shrink: 0; user-select: none;
+}
+.active-toggle.on { background: #d1d7b2; border-color: #a8b080; color: #000000; }
+
+.split-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.split-row label { font-size: 13px; font-weight: 600; min-width: 80px; flex-shrink: 0; }
+.split-row input {
+  width: 72px; background: var(--faint); border: 1px solid var(--border);
+  border-radius: 6px; padding: 7px 10px;
+  font-family: var(--heb); font-size: 14px; font-weight: 700;
+  color: #000000; text-align: center; outline: none;
+}
+.split-row input:focus { border-color: #2c2b2d; }
+.split-row .suf { font-size: 12px; color: var(--muted); }
+
+.bond-type-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.bond-type-btn {
+  flex: 1; padding: 8px; border-radius: 7px;
+  border: 2px solid var(--border); background: var(--faint);
+  font-family: var(--heb); font-size: 12px; font-weight: 700;
+  color: var(--muted); cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.bond-type-btn.active { border-color: #000000; background: rgba(0,0,0,0.05); color: #000000; }
+
+.total-bar {
+  text-align: center; font-size: 12px; font-weight: 700;
+  padding: 7px; border-radius: 6px; margin-top: 6px;
+}
+.total-bar.ok { color: #000000; background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.12); }
+.total-bar.warn { color: #888; background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.08); }
+
+.fund-input-wrap { display: flex; align-items: center; gap: 8px; }
+.fund-input-wrap input {
+  flex: 1; background: var(--faint); border: 1px solid var(--border);
+  border-radius: 7px; padding: 10px 13px;
+  font-family: var(--heb); font-size: 16px; font-weight: 700;
+  color: #000000; outline: none; text-align: center;
+}
+.fund-input-wrap input:focus { border-color: #2c2b2d; }
+.fund-input-wrap .cur { font-size: 16px; font-weight: 700; color: var(--muted); }
+
+.btn-save {
+  width: 100%; background: #000000; color: white;
+  border: none; border-radius: 9px; padding: 13px;
+  font-family: var(--heb); font-size: 15px; font-weight: 700;
+  cursor: pointer; margin-top: 10px; transition: all 0.15s;
+}
+.btn-save:hover { background: #2c2b2d; }
+
+.dynamic-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.btn-add-row {
+  background: none; border: 1px dashed var(--border-dark);
+  border-radius: 7px; padding: 7px 14px;
+  font-family: var(--heb); font-size: 12px; font-weight: 700;
+  color: var(--muted); cursor: pointer; transition: all 0.15s;
+  width: 100%; text-align: center; margin-top: 2px;
+}
+.btn-add-row:hover { border-color: #2c2b2d; color: #000000; background: rgba(0,0,0,0.03); }
+.btn-remove-row {
+  background: none; border: 1px solid var(--border);
+  border-radius: 5px; width: 28px; height: 36px;
+  font-size: 14px; color: var(--muted);
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.btn-remove-row:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+/* APP */
+.app-body { padding: 22px 24px; max-width: 1400px; margin: 0 auto; }
+
+.overview-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 11px; margin-bottom: 22px; }
+.ov-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px 17px; box-shadow: var(--shadow); }
+.ov-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 5px; }
+.ov-value { font-size: 21px; font-weight: 700; color: #000000; direction: ltr; text-align: right; }
+.ov-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 500; }
+
+.alerts-banner {
+  display: none; background: #f7f6f2;
+  border: 1px solid #dedbd6; border-radius: var(--radius);
+  padding: 13px 17px; margin-bottom: 18px;
+}
+.alerts-banner.show { display: block; }
+.alerts-title { font-size: 13px; font-weight: 800; color: #000000; margin-bottom: 8px; }
+.alert-list { display: flex; flex-direction: column; gap: 5px; }
+.alert-item { font-size: 12px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.alert-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; margin-top: 26px; }
+.section-title { font-size: 13px; font-weight: 800; color: #000000; }
+.section-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 10px; background: rgba(0,0,0,0.05); color: #888; }
+
+.asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px,1fr)); gap: 13px; }
+
+/* CARD */
+.asset-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  overflow: hidden; transition: box-shadow 0.15s, border-color 0.15s;
+}
+.asset-card:hover { box-shadow: var(--shadow-lg); border-color: var(--border-dark); }
+.asset-card.alert-stock { border: 1px solid var(--border); box-shadow: var(--shadow); }
+.asset-card.alert-bond  { border: 1px solid rgba(157,79,222,0.3); box-shadow: 0 0 0 3px rgba(157,79,222,0.12), 0 4px 20px rgba(157,79,222,0.2); }
+
+.card-strip { height: 3px; }
+.strip-emerging { background: #3a86ff; }
+.strip-index    { background: #3a86ff; }
+.strip-sector   { background: #3a86ff; }
+.strip-stock    { background: #3a86ff; }
+.strip-bond     { background: #9d4fde; }
+
+.card-body { padding: 15px 17px; }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px; }
+.card-name { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.2; }
+.card-alloc { text-align: left; flex-shrink: 0; display: flex; align-items: center; gap: 0; direction: ltr; }
+.alloc-pct { font-size: 15px; font-weight: 600; color: #000000; }
+.alloc-sep { font-size: 15px; color: var(--muted); margin: 0 4px; }
+.alloc-ils { font-size: 15px; font-weight: 600; color: var(--muted); }
+
+.pulses-section { margin-bottom: 12px; }
+.pulses-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 8px; }
+.pulses-row { display: flex; flex-direction: column; gap: 6px; }
+
+.pulse-item {
+  display: grid; grid-template-columns: 26px 1fr auto auto;
+  align-items: center; gap: 8px;
+  background: var(--faint); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 9px; transition: all 0.2s;
+}
+.pulse-item.done-pulse { background: #d1d7b2; border-color: #b8c090; }
+.pulse-item.done-pulse.cat-dev  { background: rgba(58,134,255,0.12); border-color: rgba(58,134,255,0.3); }
+.pulse-item.done-pulse.cat-idx  { background: rgba(58,134,255,0.12); border-color: rgba(58,134,255,0.3); }
+.pulse-item.done-pulse.cat-sec  { background: rgba(58,134,255,0.12); border-color: rgba(58,134,255,0.3); }
+.pulse-item.done-pulse.cat-stk  { background: rgba(58,134,255,0.12); border-color: rgba(58,134,255,0.3); }
+.pulse-item.done-pulse.cat-bond { background: rgba(157,79,222,0.12); border-color: rgba(157,79,222,0.3); }
+
+.pulse-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; flex-shrink: 0; }
+.pn-active  { background: #000000; color: white; }
+.pn-pending { background: var(--border); color: var(--muted); }
+.pn-done    { background: #000000; color: white; }
+
+.pulse-price-input {
+  background: white; border: 1px solid var(--border-dark); border-radius: 5px;
+  padding: 0 7px; font-family: var(--heb); font-size: 13px; font-weight: 400; color: #555555;
+  width: 90px; text-align: center; outline: none; direction: ltr; transition: border-color 0.15s;
+  height: 30px; box-sizing: border-box;
+}
+.pulse-price-input:focus { border-color: #2c2b2d; }
+.pulse-price-input::placeholder { color: #ccc; font-weight: 400; font-size: 11px; }
+
+.pulse-amount { font-family: var(--heb); font-size: 13px; font-weight: 700; color: #000000; white-space: nowrap; direction: ltr; }
+
+.pulse-status { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
+.ps-done      { background: rgba(58,134,255,0.15); color: #3a86ff; }
+.ps-done-bond { background: rgba(157,79,222,0.15); color: #9d4fde; }
+.ps-active    { background: rgba(0,0,0,0.07); color: #000000; }
+.ps-pending   { background: var(--border); color: var(--muted); }
+
+/* TRIGGER BOX */
+.trigger-box {
+  margin-top: 10px; padding: 9px 11px; border-radius: 7px;
+  font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+}
+.tb-neutral { background: #f7f6f2; color: var(--muted); border: 1px solid var(--border); }
+.tb-active  {
+  background: transparent; color: var(--text); border: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.tb-active::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%;
+  background: #d1d7b2; flex-shrink: 0;
+  animation: blink 1.4s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{ opacity:1; } 50%{ opacity:0.15; } }
+.tb-done    { background: rgba(60,140,80,0.10); color: #1e6e38; border: 1px solid rgba(60,140,80,0.25); }
+.trig-val   { font-weight: 800; }
+
+/* CARD FOOTER */
+.card-footer {
+  border-top: 1px solid #ece9e4; padding: 9px 17px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: #faf9f6; gap: 8px;
+}
+.foot-stat { display: flex; flex-direction: column; gap: 1px; }
+.foot-stat-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: 0.05em; }
+.foot-stat-val { font-size: 13px; font-weight: 700; color: var(--text); direction: ltr; }
+.btn-mark {
+  background: #000000; color: white; border: none; border-radius: 6px;
+  padding: 5px 11px; font-family: var(--heb); font-size: 11px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.btn-mark:hover { background: #2c2b2d; }
+
+.welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 72vh; text-align: center; padding: 40px; }
+.welcome-icon { font-size: 44px; margin-bottom: 14px; }
+.welcome-title { font-size: 22px; font-weight: 900; color: #000000; margin-bottom: 8px; }
+.welcome-sub { font-size: 14px; color: var(--muted); max-width: 340px; line-height: 1.7; margin-bottom: 26px; }
+
+@media (max-width: 768px) {
+  .overview-bar { grid-template-columns: 1fr 1fr; }
+  .asset-grid { grid-template-columns: 1fr; }
+  .app-body { padding: 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-title">יומן כניסה לשוק <span>// ניהול פעימות</span></div>
+  <div class="header-right">
+    <div class="portfolio-pill"><span class="lbl">קרן</span><span id="hdrFund">—</span></div>
+    <button class="btn-hdr" onclick="openSetup()">הגדרות תיק</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="setupModal">
+  <div class="modal">
+    <div class="modal-title">הגדרות התיק</div>
+    <div class="modal-sub">הגדרי קרן, חלוקה נכסים וסוגי נכסים. לכל סוג נכס — כתבי שם / סימבול ואת אחוז ההקצאה שלו.</div>
+
+    <div class="fsec">
+      <div class="fsec-title">קרן התיק הכוללת</div>
+      <div class="fund-input-wrap">
+        <span class="cur">₪</span>
+        <input type="number" id="cfg_fund" placeholder="0" />
+      </div>
+    </div>
+
+    <div class="fsec">
+      <div class="fsec-title">חלוקת רכיבים <span style="font-size:9px;font-weight:500;opacity:0.7;">חייב לסכום 100%</span></div>
+      <div class="split-row"><label>אג"ח</label><input type="number" id="cfg_bonds" value="0" min="0" max="100" oninput="updateTopTotal()"/><span class="suf">%</span></div>
+      <div class="split-row"><label>מניות</label><input type="number" id="cfg_stocks" value="0" min="0" max="100" oninput="updateTopTotal()"/><span class="suf">%</span></div>
+      <div class="split-row"><label>מזומן</label><input type="number" id="cfg_cash" value="0" min="0" max="100" oninput="updateTopTotal()"/><span class="suf">%</span></div>
+      <div class="total-bar warn" id="topTotal">סה"כ: 0%</div>
+    </div>
+
+    <div class="fsec">
+      <div class="fsec-title">
+        אג"ח / מזומן
+        <span class="fsec-badge">כניסה בפעימה אחת</span>
+      </div>
+
+      <div id="container_bond"></div>
+      <button class="btn-add-row" onclick="addRow('bond')">+ הוסף נכס</button>
+    </div>
+
+    <div class="fsec">
+      <div class="fsec-title">שוק מפותח (ארה"ב, אירופה, יפן) <span class="fsec-badge">±5% טריגר</span></div>
+      <div id="container_dev"></div>
+      <button class="btn-add-row" onclick="addRow('dev')">+ הוסף מדד</button>
+    </div>
+
+    <div class="fsec">
+      <div class="fsec-title">שוק מקומי (ישראל) <span class="fsec-badge">±5% טריגר</span></div>
+      <div id="container_idx"></div>
+      <button class="btn-add-row" onclick="addRow('idx')">+ הוסף מדד</button>
+    </div>
+
+    <div class="fsec">
+      <div class="fsec-title">מדד סקטוריאלי <span class="fsec-badge">±8% טריגר</span></div>
+      <div id="container_sec"></div>
+      <button class="btn-add-row" onclick="addRow('sec')">+ הוסף מדד</button>
+    </div>
+
+    <div class="fsec">
+      <div class="fsec-title">מניות בודדות <span class="fsec-badge">±10% טריגר</span></div>
+      <div id="container_stk"></div>
+      <button class="btn-add-row" onclick="addRow('stk')">+ הוסף מניה</button>
+    </div>
+
+    <div class="total-bar warn" id="stockTotal" style="margin-bottom:14px;">סה"כ מניות: 0%</div>
+    <button class="btn-save" onclick="saveConfig()">שמור והפעל יומן</button>
+  </div>
+</div>
+
+<!-- WELCOME -->
+<div class="welcome-screen" id="welcomeScreen">
+  <div class="welcome-icon">◈</div>
+  <div class="welcome-title">יומן כניסה לשוק</div>
+  <div class="welcome-sub">הגדרי את מבנה התיק שלך כדי להתחיל לעקוב אחרי פעימות הכניסה.</div>
+  <button class="btn-save" style="max-width:200px;" onclick="openSetup()">הגדרי תיק עכשיו</button>
+</div>
+
+<!-- APP -->
+<div class="app-body" id="appBody" style="display:none;">
+  <div class="overview-bar">
+    <div class="ov-card"><div class="ov-label">קרן התיק</div><div class="ov-value" id="ovFund">—</div><div class="ov-sub">סך הנכסים</div></div>
+    <div class="ov-card"><div class="ov-label">רכיב מניות</div><div class="ov-value" id="ovStocks">—</div><div class="ov-sub" id="ovStocksPct">—</div></div>
+    <div class="ov-card"><div class="ov-label">אג"ח / מזומן</div><div class="ov-value" id="ovBonds">—</div><div class="ov-sub" id="ovBondsPct">—</div></div>
+    <div class="ov-card"><div class="ov-label">פעימות שהושלמו</div><div class="ov-value" id="ovPulses">0 / 0</div><div class="ov-sub">מתוך סך הפעימות</div></div>
+  </div>
+
+  <div class="alerts-banner" id="alertsBanner">
+    <div class="alerts-title">טריגרים פעילים לפעימה הבאה</div>
+    <div class="alert-list" id="alertsList"></div>
+  </div>
+
+  <div id="bondsSection">
+    <div class="section-header">
+      <div class="section-title">אג"ח / מזומן</div>
+      <span class="section-badge">כניסה בפעימה אחת</span>
+    </div>
+    <div class="asset-grid" id="bondsGrid"></div>
+  </div>
+
+  <div class="section-header"><div class="section-title">שוק מפותח (ארה"ב, אירופה, יפן)</div><span class="section-badge">±5% טריגר</span></div>
+  <div class="asset-grid" id="devGrid"></div>
+
+  <div class="section-header"><div class="section-title">שוק מקומי (ישראל)</div><span class="section-badge">±5% טריגר</span></div>
+  <div class="asset-grid" id="idxGrid"></div>
+
+  <div class="section-header"><div class="section-title">מדד סקטוריאלי</div><span class="section-badge">±8% טריגר</span></div>
+  <div class="asset-grid" id="secGrid"></div>
+
+  <div class="section-header"><div class="section-title">מניות בודדות</div><span class="section-badge">±10% טריגר</span></div>
+  <div class="asset-grid" id="stkGrid"></div>
+  <div style="height:40px;"></div>
+</div>
+
+<script>
+var config = null;
+var pulseData = {};
+var bondType = 'etf';
+var dynRows = {
+  bond: [{name:'',pct:0}],
+  dev: [{name:'',pct:0}],
+  idx: [{name:'',pct:0}],
+  sec: [{name:'',pct:0}],
+  stk: [{name:'',pct:0}]
+};
+
+var TRIGGER_RATES = {dev:0.05, idx:0.05, sec:0.08, stk:0.10};
+var TYPE_LABELS   = {dev:'שוק מפותח', idx:'שוק מקומי', sec:'סקטוריאלי', stk:'מניה'};
+var TYPE_CSS      = {dev:'emerging', idx:'index', sec:'sector', stk:'stock'};
+var ROW_LABELS    = {bond:'נכס', dev:'מדד', idx:'מדד', sec:'מדד', stk:'מניה'};
+
+function load() {
+  try {
+    var c = localStorage.getItem('ej5_config');
+    var p = localStorage.getItem('ej5_pulses');
+    var d = localStorage.getItem('ej5_dynrows');
+    if (c) config    = JSON.parse(c);
+    if (p) pulseData = JSON.parse(p);
+    if (d) dynRows   = JSON.parse(d);
+    bondType = config ? (config.bondType || 'etf') : 'etf';
+  } catch(e) {}
+  // ensure all keys exist
+  ['bond','dev','idx','sec','stk'].forEach(function(p){ if (!dynRows[p]) dynRows[p] = [{name:'',pct:0}]; });
+}
+
+function saveAll() {
+  try {
+    localStorage.setItem('ej5_config',  JSON.stringify(config));
+    localStorage.setItem('ej5_pulses',  JSON.stringify(pulseData));
+    localStorage.setItem('ej5_dynrows', JSON.stringify(dynRows));
+  } catch(e) {}
+}
+
+function fmt(n) { if (!n && n !== 0) return '—'; return Math.round(n).toLocaleString('he-IL'); }
+
+function numPulses(allocPctOfStocks) { return allocPctOfStocks >= 15 ? 3 : 2; }
+
+function getPD(key, idx) { return pulseData[key+'_p'+idx] || {price:null, date:null, done:false}; }
+function setPD(key, idx, data) { pulseData[key+'_p'+idx] = data; saveAll(); }
+
+function getLastDone(key, nP) {
+  for (var i = nP; i >= 1; i--) { var p = getPD(key,i); if (p.done && p.price) return {price:parseFloat(p.price), idx:i}; }
+  return null;
+}
+function getNextPending(key, nP) {
+  for (var i = 1; i <= nP; i++) { if (!getPD(key,i).done) return i; }
+  return null;
+}
+
+// DYNAMIC ROWS
+function renderRows(prefix) {
+  var el = document.getElementById('container_'+prefix);
+  if (!el) return;
+  var rows = dynRows[prefix] || [];
+  var lbl  = ROW_LABELS[prefix];
+  var html = '';
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var canRemove = rows.length > 1;
+    html += '<div style="margin-bottom:2px;">';
+    html += '<div class="row-label" style="margin-bottom:4px;">' + lbl + ' ' + (i+1) + '</div>';
+    html += '<div class="asset-cfg-row">';
+    html += '<input type="text" value="' + (row.name||'') + '" placeholder="סימבול / שם" oninput="setName(\'' + prefix + '\',' + i + ',this.value)" />';
+    html += '<div class="pct-wrap"><input type="number" value="' + (row.pct||0) + '" min="0" max="100" oninput="setPct(\'' + prefix + '\',' + i + ',this.value)" /><span>%</span></div>';
+    if (canRemove) {
+      html += '<button class="btn-remove-row" onclick="removeRow(\'' + prefix + '\',' + i + ')">×</button>';
+    } else {
+      html += '<div style="width:28px;"></div>';
+    }
+    html += '</div></div>';
+  }
+  el.innerHTML = html;
+}
+
+function renderAllRows() { ['bond','dev','idx','sec','stk'].forEach(renderRows); }
+
+function addRow(prefix) { if (!dynRows[prefix]) dynRows[prefix] = []; dynRows[prefix].push({name:'',pct:0}); renderRows(prefix); updateStockTotal(); }
+
+function removeRow(prefix, idx) {
+  if (dynRows[prefix].length <= 1) return;
+  dynRows[prefix].splice(idx,1); renderRows(prefix); updateStockTotal();
+}
+
+function setName(prefix, idx, val) { dynRows[prefix][idx].name = val; updateStockTotal(); }
+
+function setPct(prefix, idx, val) {
+  var pct = parseFloat(val) || 0;
+  if ((prefix === 'sec' || prefix === 'stk') && pct > 15) {
+    alert('סקטור ומניה בודדת לא יכולים לעלות על 15% מרכיב המניות. הוגבל ל-15%.');
+    var inputs = document.querySelectorAll('#container_'+prefix+' input[type="number"]');
+    if (inputs[idx]) inputs[idx].value = 15;
+    dynRows[prefix][idx].pct = 15;
+    updateStockTotal(); return;
+  }
+  dynRows[prefix][idx].pct = pct;
+  updateStockTotal();
+}
+
+function selectBondType(type) {
+  bondType = type;
+  var etf = document.getElementById('bt_etf');
+  var mmf = document.getElementById('bt_mmf');
+  if (etf) etf.classList.toggle('active', type==='etf');
+  if (mmf) mmf.classList.toggle('active', type==='mmf');
+}
+
+function updateTopTotal() {
+  var b = +document.getElementById('cfg_bonds').value  || 0;
+  var s = +document.getElementById('cfg_stocks').value || 0;
+  var c = +document.getElementById('cfg_cash').value   || 0;
+  var t = b+s+c;
+  var el = document.getElementById('topTotal');
+  el.textContent = 'סה"כ: '+t+'%';
+  el.className = 'total-bar '+(Math.abs(t-100)<0.5?'ok':'warn');
+}
+
+function updateStockTotal() {
+  var total = 0;
+  ['dev','idx','sec','stk'].forEach(function(p) { (dynRows[p]||[]).forEach(function(r){ total += parseFloat(r.pct)||0; }); });
+  var el = document.getElementById('stockTotal');
+  el.textContent = 'סה"כ מניות: '+Math.round(total*10)/10+'%';
+  el.className = 'total-bar '+(Math.abs(total-100)<0.5?'ok':'warn');
+}
+
+function buildAssets() {
+  if (!config) return [];
+  var stocksFund = config.fund*(config.stocksPct/100);
+  var assets = [];
+  ['dev','idx','sec','stk'].forEach(function(prefix) {
+    var rows = (config.dynRows && config.dynRows[prefix]) ? config.dynRows[prefix] : [];
+    rows.forEach(function(row, i) {
+      if (!row.name || !row.pct) return;
+      assets.push({
+        key: prefix+(i+1), name: row.name, prefix: prefix,
+        typeCss: TYPE_CSS[prefix], typeLabel: TYPE_LABELS[prefix],
+        allocPctStocks: row.pct,
+        totalAmount: stocksFund*(row.pct/100),
+        triggerRate: TRIGGER_RATES[prefix]
+      });
+    });
+  });
+  return assets;
+}
+
+function renderBondCard() {
+  var bondRows = (config.dynRows && config.dynRows.bond) ? config.dynRows.bond.filter(function(r){ return r.name; }) : [];
+  if (!config || bondRows.length === 0) return '';
+  var totalBondFund = config.fund * ((config.bondsPct + (config.cashPct||0)) / 100);
+  var cards = '';
+
+  bondRows.forEach(function(row, ri) {
+    if (!row.name) return;
+    var amount = totalBondFund * (row.pct / 100);
+    var pdKey = 'bond_entry_' + ri;
+    var pd = pulseData[pdKey] || {price:null, done:false};
+    var isDone = pd.done;
+    var numCls  = isDone ? 'pn-done' : 'pn-active';
+    var itemCls = isDone ? 'done-pulse cat-bond' : 'active-pulse';
+    var statusHtml = isDone
+      ? '<span class="pulse-status ps-done-bond">בוצע</span>'
+      : '<span class="pulse-status ps-active">פעיל</span>';
+
+    var priceContent = '';
+    if (isDone) {
+      priceContent = '<span style="font-size:13px;font-weight:400;color:#888;">'+pd.price+' | '+pd.date+'</span>';
+    } else {
+      priceContent = '<input type="number" step="0.01" class="pulse-price-input'+(pd.price?' has-val':'')+'" placeholder="מחיר" value="'+(pd.price||'')+'" data-ri="'+ri+'" onchange="onBondPriceChange(this)"/>';
+    }
+
+    var pulseRow = '<div class="pulse-item '+itemCls+'">' +
+      '<div class="pulse-num '+numCls+'">1</div>' +
+      '<div><div style="display:flex;align-items:center;gap:6px;">'+priceContent+'</div></div>' +
+      '<div class="pulse-amount">&#8362;'+fmt(amount)+'</div>' +
+      statusHtml+'</div>';
+
+    var markBtn = !isDone ? '<button class="btn-mark" data-ri="'+ri+'" onclick="markBondDone(this)">&#10003; פעימה 1</button>' : '';
+    var bondAlert = (pd.price && !isDone) ? 'alert-bond' : '';
+    var allocPct = row.pct ? row.pct+'%' : '';
+
+    cards += '<div class="asset-card '+bondAlert+'">' +
+      '<div class="card-strip strip-bond"></div>' +
+      '<div class="card-body">' +
+        '<div class="card-header">' +
+          '<div><div class="card-name">'+row.name+'</div></div>' +
+          '<div class="card-alloc"><span class="alloc-ils">&#8362;'+fmt(amount)+'</span><span class="alloc-sep"> | </span><span class="alloc-pct">'+allocPct+'</span></div>' +
+        '</div>' +
+        '<div class="pulses-section"><div class="pulses-row">'+pulseRow+'</div></div>' +
+      '</div>' +
+      '<div class="card-footer">' +
+        '<div class="foot-stat"><div class="foot-stat-lbl">בוצע</div><div class="foot-stat-val">'+(isDone?'1':'0')+' / 1</div></div>' +
+        markBtn +
+      '</div></div>';
+  });
+  return cards;
+}
+
+function onBondPriceChange(el) {
+  var ri = el.getAttribute('data-ri') || '0';
+  var key = 'bond_entry_'+ri;
+  pulseData[key] = Object.assign({}, pulseData[key]||{}, {price: el.value?parseFloat(el.value):null});
+  saveAll(); render();
+}
+
+function markBondDone(el) {
+  var ri = el.getAttribute('data-ri') || '0';
+  var key = 'bond_entry_'+ri;
+  var pd = pulseData[key] || {};
+  if (!pd.price) { alert('הכניסי מחיר לפני שמסמנת כבוצע'); return; }
+  pulseData[key] = {price:pd.price, done:true, date:new Date().toLocaleDateString('he-IL')};
+  saveAll(); render();
+}
+
+function renderCard(asset) {
+  var nP = numPulses(asset.allocPctStocks);
+  var pAmt = Math.round(asset.totalAmount/nP);
+  var lastDone    = getLastDone(asset.key, nP);
+  var nextPending = getNextPending(asset.key, nP);
+  var allDone     = nextPending === null;
+  var trigger     = lastDone ? {up: lastDone.price*(1+asset.triggerRate), down: lastDone.price*(1-asset.triggerRate)} : null;
+  var trigPct     = Math.round(asset.triggerRate*100);
+
+  var trigHtml = '';
+  if (allDone) {
+    trigHtml = '<div class="trigger-box tb-done">כל הפעימות הושלמו</div>';
+  } else if (trigger && nextPending) {
+    trigHtml = '<div class="trigger-box tb-active">' +
+      '<span style="color:#888;font-weight:500;">פעימה '+nextPending+':</span> ' +
+      '<span class="trig-val" style="color:#1e6e38;">&#8593;'+trigger.up.toFixed(2)+'</span>' +
+      '<span style="color:#ccc;"> | </span>' +
+      '<span class="trig-val" style="color:#6f2222;">&#8595;'+trigger.down.toFixed(2)+'</span> ' +
+      '<span style="color:#aaa;font-size:11px;">(&#177;'+trigPct+'%)</span></div>';
+  } else {
+    trigHtml = '<div class="trigger-box tb-neutral">הכניסי מחיר פעימה 1 לחישוב טריגרים</div>';
+  }
+
+  var pulsesHtml = '';
+  for (var i = 1; i <= nP; i++) {
+    var pd = getPD(asset.key, i);
+    var prevDone = i===1 || getPD(asset.key, i-1).done;
+    var isActive = !pd.done && prevDone;
+    var isDone   = pd.done;
+    var numCls   = isDone ? 'pn-done' : (isActive ? 'pn-active' : 'pn-pending');
+    var itemCls  = isDone ? 'done-pulse cat-'+asset.prefix : '';
+    var statusHtml = isDone
+      ? '<span class="pulse-status ps-done">בוצע</span>'
+      : isActive
+        ? '<span class="pulse-status ps-active">פעיל</span>'
+        : '<span class="pulse-status ps-pending">נעול</span>';
+
+    var priceContent = '';
+    if (isDone) {
+      priceContent = '<span style="font-size:13px;font-weight:400;color:#888;">'+pd.price+' | '+pd.date+'</span>';
+    } else {
+      priceContent = '<input type="number" step="0.01"' +
+        ' class="pulse-price-input'+(pd.price?' has-val':'')+'"' +
+        ' placeholder="מחיר" value="'+(pd.price||'')+'"' +
+        ' data-key="'+asset.key+'" data-idx="'+i+'"' +
+        ' onchange="handlePriceChange(this)"/>';
+    }
+
+    pulsesHtml += '<div class="pulse-item '+itemCls+'">' +
+      '<div class="pulse-num '+numCls+'">'+i+'</div>' +
+      '<div><div style="display:flex;align-items:center;gap:6px;">'+priceContent+'</div></div>' +
+      '<div class="pulse-amount">&#8362;'+fmt(pAmt)+'</div>' +
+      statusHtml+'</div>';
+  }
+
+  var doneCount = 0;
+  for (var j = 1; j <= nP; j++) { if (getPD(asset.key,j).done) doneCount++; }
+
+  var footerRight = '';
+  if (trigger && !allDone) {
+    footerRight =
+      '<div class="foot-stat"><div class="foot-stat-lbl">טריגר &#8593;</div><div class="foot-stat-val" style="color:#1e6e38;">'+trigger.up.toFixed(2)+'</div></div>' +
+      '<div class="foot-stat"><div class="foot-stat-lbl">טריגר &#8595;</div><div class="foot-stat-val" style="color:#6f2222;">'+trigger.down.toFixed(2)+'</div></div>';
+  }
+
+  var markBtn = (!allDone && nextPending)
+    ? '<button class="btn-mark" data-key="'+asset.key+'" data-pulse="'+nextPending+'" onclick="handleMarkDone(this)">&#10003; פעימה '+nextPending+'</button>'
+    : '';
+
+  var alertCls = (trigger && nextPending) ? 'alert-stock' : '';
+
+  return '<div class="asset-card '+alertCls+'">' +
+    '<div class="card-strip strip-'+asset.typeCss+'"></div>' +
+    '<div class="card-body">' +
+      '<div class="card-header">' +
+        '<div><div class="card-name">'+asset.name+'</div></div>' +
+        '<div class="card-alloc"><span class="alloc-ils">&#8362;'+fmt(asset.totalAmount)+'</span><span class="alloc-sep"> | </span><span class="alloc-pct">'+asset.allocPctStocks+'%</span></div>' +
+      '</div>' +
+      '<div class="pulses-section">' +
+
+        '<div class="pulses-row">'+pulsesHtml+'</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="card-footer">' +
+      '<div class="foot-stat"><div class="foot-stat-lbl">בוצע</div><div class="foot-stat-val">'+doneCount+' / '+nP+'</div></div>' +
+      footerRight + markBtn +
+    '</div></div>';
+}
+
+function handlePriceChange(el) {
+  var key = el.getAttribute('data-key');
+  var idx = parseInt(el.getAttribute('data-idx'));
+  var pd = getPD(key, idx);
+  pd.price = el.value ? parseFloat(el.value) : null;
+  setPD(key, idx, pd);
+  render();
+}
+
+function handleMarkDone(el) {
+  var key = el.getAttribute('data-key');
+  var idx = parseInt(el.getAttribute('data-pulse'));
+  var pd  = getPD(key, idx);
+  if (!pd.price) { alert('הכניסי מחיר לפני שמסמנת כבוצע'); return; }
+  pd.done = true;
+  pd.date = new Date().toLocaleDateString('he-IL');
+  setPD(key, idx, pd);
+  render();
+}
+
+function render() {
+  if (!config) return;
+  var assets     = buildAssets();
+  var stocksFund = config.fund*(config.stocksPct/100);
+  var bondsFund  = config.fund*(config.bondsPct/100);
+
+  document.getElementById('hdrFund').textContent    = '₪'+fmt(config.fund);
+  document.getElementById('ovFund').textContent     = '₪'+fmt(config.fund);
+  document.getElementById('ovStocks').textContent   = '₪'+fmt(stocksFund);
+  document.getElementById('ovStocksPct').textContent= config.stocksPct+'% מהתיק';
+  var combinedBondFund = config.fund * ((config.bondsPct + (config.cashPct||0)) / 100);
+  document.getElementById('ovBonds').textContent    = '₪'+fmt(combinedBondFund);
+  document.getElementById('ovBondsPct').textContent = (config.bondsPct+(config.cashPct||0))+'% מהתיק';
+
+  var total=0, done=0;
+  assets.forEach(function(a) {
+    var nP = numPulses(a.allocPctStocks); total += nP;
+    for (var i=1; i<=nP; i++) if (getPD(a.key,i).done) done++;
+  });
+  document.getElementById('ovPulses').textContent = done+' / '+total;
+
+    var hasBonds = config.dynRows && config.dynRows.bond && config.dynRows.bond.some(function(r){ return r.name; });
+  document.getElementById('bondsSection').style.display = (config.bondsPct > 0 || hasBonds) ? '' : 'none';
+  document.getElementById('bondsGrid').innerHTML = (config.bondsPct > 0 || hasBonds) ? renderBondCard() : '';
+  document.getElementById('devGrid').innerHTML = assets.filter(function(a){return a.typeCss==='emerging';}).map(renderCard).join('');
+  document.getElementById('idxGrid').innerHTML = assets.filter(function(a){return a.typeCss==='index';}).map(renderCard).join('');
+  document.getElementById('secGrid').innerHTML = assets.filter(function(a){return a.typeCss==='sector';}).map(renderCard).join('');
+  document.getElementById('stkGrid').innerHTML = assets.filter(function(a){return a.typeCss==='stock';}).map(renderCard).join('');
+
+  var alertItems = [];
+  assets.forEach(function(a) {
+    var nP=numPulses(a.allocPctStocks), last=getLastDone(a.key,nP), next=getNextPending(a.key,nP);
+    if (!last||!next) return;
+    alertItems.push({name:a.name, pulseNum:next,
+      up:(last.price*(1+a.triggerRate)).toFixed(2),
+      down:(last.price*(1-a.triggerRate)).toFixed(2),
+      pct:Math.round(a.triggerRate*100)});
+  });
+  var banner = document.getElementById('alertsBanner');
+  if (alertItems.length===0) { banner.classList.remove('show'); return; }
+  banner.classList.add('show');
+  document.getElementById('alertsList').innerHTML = alertItems.map(function(a) {
+    return '<div class="alert-item"><div class="alert-dot" style="background:#d1d7b2;"></div>' +
+      '<strong>'+a.name+'</strong> — פעימה '+a.pulseNum+':&nbsp;' +
+      '<span style="color:#1e6e38;">&#8593;'+a.up+'</span>&nbsp;|&nbsp;' +
+      '<span style="color:#6f2222;">&#8595;'+a.down+'</span>' +
+      '<span style="color:var(--muted);font-size:11px;">(&#177;'+a.pct+'%)</span></div>';
+  }).join('');
+}
+
+function openSetup() {
+  if (config) {
+    document.getElementById('cfg_fund').value   = config.fund||'';
+    document.getElementById('cfg_bonds').value  = config.bondsPct||0;
+    document.getElementById('cfg_stocks').value = config.stocksPct||0;
+    document.getElementById('cfg_cash').value   = config.cashPct||0;
+
+    selectBondType(config.bondType||'etf');
+    if (config.dynRows) dynRows = JSON.parse(JSON.stringify(config.dynRows));
+  }
+  updateTopTotal(); updateStockTotal();
+  document.getElementById('setupModal').classList.add('show');
+  setTimeout(renderAllRows, 10);
+}
+
+function saveConfig() {
+  var fund = parseFloat(document.getElementById('cfg_fund').value);
+  if (!fund||fund<=0) { alert('הכניסי סכום קרן תקין'); return; }
+  var bondsPct  = +document.getElementById('cfg_bonds').value  || 0;
+  var stocksPct = +document.getElementById('cfg_stocks').value || 0;
+  var cashPct   = +document.getElementById('cfg_cash').value   || 0;
+  if (Math.abs(bondsPct+stocksPct+cashPct-100)>1) { alert('החלוקה חייבת להיות 100%'); return; }
+
+  var stockSum = 0;
+  ['dev','idx','sec','stk'].forEach(function(p){ (dynRows[p]||[]).forEach(function(r){ stockSum+=parseFloat(r.pct)||0; }); });
+  if (Math.abs(stockSum-100)>1) { alert('חלוקת המניות חייבת להיות 100%'); return; }
+
+  config = {fund:fund, bondsPct:bondsPct, stocksPct:stocksPct, cashPct:cashPct,
+    bondType:bondType,
+    dynRows:JSON.parse(JSON.stringify(dynRows))};
+
+  saveAll();
+  document.getElementById('setupModal').classList.remove('show');
+  document.getElementById('welcomeScreen').style.display='none';
+  document.getElementById('appBody').style.display='block';
+  render();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('setupModal').addEventListener('click', function(e){ if(e.target===this) this.classList.remove('show'); });
+  load();
+  renderAllRows();
+  updateTopTotal(); updateStockTotal();
+  if (config) {
+    document.getElementById('welcomeScreen').style.display='none';
+    document.getElementById('appBody').style.display='block';
+    render();
+  }
+});
+</script>
+</body>
+</html>
